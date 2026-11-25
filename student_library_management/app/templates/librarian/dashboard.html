@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Librarian Desk{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-12 d-flex justify-content-between align-items-center">
+    <div>
+      <h2 class="fw-bold mb-0"><i class="bi bi-grid me-2 text-warning"></i>Circulation Desk</h2>
+      <p class="text-muted small">Manage loans, returns, physical copies, and student borrow requests</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('librarian.issue_book') }}" class="btn btn-primary"><i class="bi bi-box-arrow-right me-1"></i> Issue Book</a>
+      <a href="{{ url_for('librarian.return_book') }}" class="btn btn-outline-dark"><i class="bi bi-box-arrow-in-left me-1"></i> Return Book</a>
+    </div>
+  </div>
+</div>
+
+<!-- Circulation Metrics -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card p-3 stat-card">
+      <span class="text-muted small text-uppercase fw-semibold">Active Loans</span>
+      <h3 class="fw-bold my-1 text-primary">{{ metrics.active_loans }}</h3>
+      <a href="{{ url_for('librarian.loans') }}" class="small text-decoration-none">View active &rarr;</a>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card p-3 stat-card stat-warning">
+      <span class="text-muted small text-uppercase fw-semibold">Pending Requests</span>
+      <h3 class="fw-bold my-1 text-warning">{{ metrics.pending_requests }}</h3>
+      <a href="{{ url_for('librarian.requests') }}" class="small text-decoration-none">Review queue &rarr;</a>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card p-3 stat-card stat-danger">
+      <span class="text-muted small text-uppercase fw-semibold">Overdue Loans</span>
+      <h3 class="fw-bold my-1 text-danger">{{ metrics.overdue_loans }}</h3>
+      <a href="{{ url_for('reports.overdue') }}" class="small text-decoration-none">Overdue report &rarr;</a>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card p-3 stat-card stat-success">
+      <span class="text-muted small text-uppercase fw-semibold">Available Copies</span>
+      <h3 class="fw-bold my-1 text-success">{{ metrics.available_copies }} <span class="fs-6 text-muted">/ {{ metrics.total_copies }}</span></h3>
+      <a href="{{ url_for('books.index') }}" class="small text-decoration-none">Catalogue &rarr;</a>
+    </div>
+  </div>
+</div>
+
+<!-- Pending Requests Table -->
+<div class="card mb-4">
+  <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+    <h5 class="fw-bold mb-0"><i class="bi bi-inbox me-2 text-warning"></i>Pending Borrow Requests</h5>
+    <a href="{{ url_for('librarian.requests') }}" class="btn btn-sm btn-outline-secondary">View all requests</a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Student</th>
+            <th>Book Title</th>
+            <th>Requested Date</th>
+            <th>Available Copies</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in pending_requests %}
+            <tr>
+              <td>
+                <strong>{{ req.student.full_name }}</strong><br>
+                <small class="text-muted">{{ req.student.email }} ({{ req.student.student_id or 'No ID' }})</small>
+              </td>
+              <td><strong>{{ req.book.title }}</strong></td>
+              <td>{{ req.request_date|dt(with_time=True) }}</td>
+              <td>
+                {% if req.book.available_copies > 0 %}
+                  <span class="badge bg-success">{{ req.book.available_copies }} available</span>
+                {% else %}
+                  <span class="badge bg-danger">0 available</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="d-flex gap-1">
+                  {% if req.book.available_copies > 0 %}
+                    <form method="POST" action="{{ url_for('librarian.approve_request', request_id=req.id) }}" class="d-inline">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                    </form>
+                  {% endif %}
+                  <form method="POST" action="{{ url_for('librarian.reject_request', request_id=req.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Decline</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="5" class="py-4 text-center text-muted">No pending borrow requests right now.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Overdue Loans Table -->
+<div class="card mb-4">
+  <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+    <h5 class="fw-bold mb-0 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Urgent Overdue Loans</h5>
+    <a href="{{ url_for('reports.overdue') }}" class="btn btn-sm btn-outline-danger">Full Overdue Report</a>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Student</th>
+            <th>Book Title</th>
+            <th>Accession No.</th>
+            <th>Due Date</th>
+            <th>Days Overdue</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for loan in overdue_loans %}
+            <tr>
+              <td>
+                <strong>{{ loan.student.full_name }}</strong><br>
+                <small class="text-muted">{{ loan.student.email }}</small>
+              </td>
+              <td><strong>{{ loan.book_copy.book.title }}</strong></td>
+              <td class="font-monospace small">{{ loan.book_copy.accession_number }}</td>
+              <td class="text-danger fw-bold">{{ loan.due_date|dt }}</td>
+              <td><span class="badge bg-danger">{{ loan.days_overdue }} days</span></td>
+              <td>
+                <form method="POST" action="{{ url_for('librarian.return_loan_action', loan_id=loan.id) }}" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-sm btn-outline-success">Receive Return</button>
+                </form>
+              </td>
+            </tr>
+          {% else %}
+            <tr><td colspan="6" class="py-3 text-center text-muted">No overdue books at the moment.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

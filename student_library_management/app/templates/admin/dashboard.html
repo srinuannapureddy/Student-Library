@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+  <div class="col-12 d-flex justify-content-between align-items-center">
+    <div>
+      <h2 class="fw-bold mb-0"><i class="bi bi-shield-shaded me-2 text-danger"></i>System Administration</h2>
+      <p class="text-muted small">Library operations, configuration, catalogue governance, and member privileges</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('admin.add_book') }}" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i> Add New Book</a>
+      <a href="{{ url_for('admin.create_staff_user') }}" class="btn btn-outline-dark"><i class="bi bi-person-plus me-1"></i> Add Staff</a>
+    </div>
+  </div>
+</div>
+
+<!-- Metrics Row -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card p-3 stat-card">
+      <span class="text-muted small text-uppercase fw-semibold">Total Titles</span>
+      <h3 class="fw-bold my-1 text-primary">{{ metrics.total_books }}</h3>
+      <a href="{{ url_for('admin.books') }}" class="small text-decoration-none">Manage catalogue &rarr;</a>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card p-3 stat-card stat-success">
+      <span class="text-muted small text-uppercase fw-semibold">Total Physical Copies</span>
+      <h3 class="fw-bold my-1 text-success">{{ metrics.total_copies }}</h3>
+      <span class="small text-muted">{{ metrics.available_copies }} available / {{ metrics.issued_copies }} issued</span>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card p-3 stat-card stat-warning">
+      <span class="text-muted small text-uppercase fw-semibold">Registered Students</span>
+      <h3 class="fw-bold my-1 text-warning">{{ metrics.total_students }}</h3>
+      <a href="{{ url_for('admin.users', role='student') }}" class="small text-decoration-none">View students &rarr;</a>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card p-3 stat-card stat-danger">
+      <span class="text-muted small text-uppercase fw-semibold">Uncollected Fines</span>
+      <h3 class="fw-bold my-1 text-danger">${{ "%.2f"|format(metrics.unpaid_fines_sum) }}</h3>
+      <a href="{{ url_for('reports.fines') }}" class="small text-decoration-none">Fines collection &rarr;</a>
+    </div>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <!-- Category Breakdown Chart -->
+  <div class="col-lg-6 mb-4">
+    <div class="card h-100 shadow-sm p-3">
+      <h5 class="fw-bold mb-3"><i class="bi bi-pie-chart me-2 text-primary"></i>Collection by Category</h5>
+      <div style="height: 280px; position: relative;">
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent System Audit Logs -->
+  <div class="col-lg-6 mb-4">
+    <div class="card h-100 shadow-sm">
+      <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="fw-bold mb-0"><i class="bi bi-journal-text me-2 text-secondary"></i>Recent Audit Events</h5>
+        <a href="{{ url_for('admin.audit_logs') }}" class="btn btn-sm btn-outline-secondary">Full Log</a>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Event</th>
+                <th>Entity</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in recent_logs %}
+                <tr>
+                  <td>
+                    <span class="badge bg-light text-dark border">{{ log.action }}</span><br>
+                    <small class="text-muted text-truncate d-inline-block" style="max-width: 240px;">{{ log.description }}</small>
+                  </td>
+                  <td><span class="small font-monospace">{{ log.entity_type }} #{{ log.entity_id or '—' }}</span></td>
+                  <td class="small text-muted">{{ log.created_at|dt(with_time=True) }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="3" class="text-center text-muted py-3">No audit records logged yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const catLabels = {{ category_data|map(attribute='category')|list|tojson }};
+const catCounts = {{ category_data|map(attribute='count')|list|tojson }};
+
+const ctx = document.getElementById('categoryChart');
+if (ctx) {
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: catLabels,
+      datasets: [{
+        data: catCounts,
+        backgroundColor: [
+          '#2b6cb0', '#319795', '#d69e2e', '#e53e3e', '#805ad5', '#4a5568'
+        ],
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'bottom' }
+      }
+    }
+  });
+}
+</script>
+{% endblock %}
+

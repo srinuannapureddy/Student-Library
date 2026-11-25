@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Books{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="fw-bold mb-0"><i class="bi bi-collection me-2 text-primary"></i>Catalogue Management</h3>
+      <a href="{{ url_for('admin.add_book') }}" class="btn btn-sm btn-primary"><i class="bi bi-plus-circle me-1"></i> Add New Book</a>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Title & Author</th>
+                <th>ISBN</th>
+                <th>Category</th>
+                <th>Copies Available / Total</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for book in books %}
+                <tr>
+                  <td>
+                    <strong>{{ book.title }}</strong><br>
+                    <small class="text-muted">{{ book.author }}</small>
+                  </td>
+                  <td class="font-monospace small">{{ book.isbn }}</td>
+                  <td>{{ book.category.category_name if book.category else '—' }}</td>
+                  <td>
+                    <span class="badge bg-light text-dark border">
+                      {{ book.available_copies }} of {{ book.total_copies }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if book.is_archived %}
+                      <span class="badge bg-secondary">Archived</span>
+                    {% else %}
+                      <span class="badge bg-success">Active</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div class="d-flex gap-1">
+                      <a href="{{ url_for('books.detail', book_id=book.id) }}" class="btn btn-sm btn-outline-info" title="View"><i class="bi bi-eye"></i></a>
+                      <a href="{{ url_for('admin.edit_book', book_id=book.id) }}" class="btn btn-sm btn-outline-primary" title="Edit"><i class="bi bi-pencil"></i></a>
+                      <a href="{{ url_for('librarian.manage_copies', book_id=book.id) }}" class="btn btn-sm btn-outline-secondary" title="Manage Copies"><i class="bi bi-upc-scan"></i></a>
+                      <form method="POST" action="{{ url_for('admin.archive_book', book_id=book.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm {% if book.is_archived %}btn-outline-success{% else %}btn-outline-danger{% endif %}" title="{% if book.is_archived %}Unarchive{% else %}Archive{% endif %}">
+                          <i class="bi {% if book.is_archived %}bi-box-arrow-up{% else %}bi-archive{% endif %}"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">No books registered yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

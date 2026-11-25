@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+  <div class="col-md-7 col-lg-6">
+    <div class="card shadow-sm p-4">
+      <div class="text-center mb-4">
+        <div class="display-5 text-primary mb-2"><i class="bi bi-person-plus-fill"></i></div>
+        <h3 class="fw-bold">Student Membership Registration</h3>
+        <p class="text-muted small">Create an account to browse, request, and borrow library books</p>
+      </div>
+
+      <form method="POST" action="{{ url_for('auth.register') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+          <label for="full_name" class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="full_name" name="full_name" value="{{ full_name or '' }}" required placeholder="e.g. John Doe">
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label for="email" class="form-label fw-semibold">Email address <span class="text-danger">*</span></label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ email or '' }}" required placeholder="john@student.edu">
+          </div>
+          <div class="col-md-6">
+            <label for="student_id" class="form-label fw-semibold">Student ID / Roll No.</label>
+            <input type="text" class="form-control" id="student_id" name="student_id" value="{{ student_id or '' }}" placeholder="STU-2024-001">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="phone" class="form-label fw-semibold">Phone Number</label>
+          <input type="tel" class="form-control" id="phone" name="phone" value="{{ phone or '' }}" placeholder="+1234567890">
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label for="password" class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+            <input type="password" class="form-control" id="password" name="password" required placeholder="At least 8 chars, 1 letter, 1 digit">
+          </div>
+          <div class="col-md-6">
+            <label for="confirm_password" class="form-label fw-semibold">Confirm Password <span class="text-danger">*</span></label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required placeholder="Re-enter password">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-warning w-100 py-2 fw-semibold mb-3">Create Student Account</button>
+      </form>
+
+      <div class="text-center mt-3 pt-2 border-top">
+        <p class="small text-muted mb-0">Already registered? <a href="{{ url_for('auth.login') }}" class="fw-semibold">Sign in here</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

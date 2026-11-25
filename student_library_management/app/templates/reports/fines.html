@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Fines Collection Report{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h3 class="fw-bold mb-0"><i class="bi bi-receipt me-2 text-danger"></i>Fines Collection & Settlement</h3>
+        <p class="text-muted small">Record fine receipts, waive penalties, and monitor overdue liabilities</p>
+      </div>
+      <div class="btn-group">
+        <a href="{{ url_for('reports.fines') }}" class="btn btn-sm {% if not current_status %}btn-dark{% else %}btn-outline-secondary{% endif %}">All Fines</a>
+        <a href="{{ url_for('reports.fines', status='unpaid') }}" class="btn btn-sm {% if current_status == 'unpaid' %}btn-danger{% else %}btn-outline-secondary{% endif %}">Unpaid Only</a>
+        <a href="{{ url_for('reports.fines', status='paid') }}" class="btn btn-sm {% if current_status == 'paid' %}btn-success{% else %}btn-outline-secondary{% endif %}">Paid</a>
+        <a href="{{ url_for('reports.fines', status='waived') }}" class="btn btn-sm {% if current_status == 'waived' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">Waived</a>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Fine ID</th>
+                <th>Student</th>
+                <th>Book Title</th>
+                <th>Days Overdue</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Recorded By</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for fine in fines %}
+                <tr>
+                  <td class="font-monospace small">#{{ fine.id }}</td>
+                  <td>
+                    <strong>{{ fine.loan.student.full_name }}</strong><br>
+                    <small class="text-muted">{{ fine.loan.student.email }}</small>
+                  </td>
+                  <td>
+                    <strong>{{ fine.loan.book_copy.book.title }}</strong><br>
+                    <small class="text-muted font-monospace">{{ fine.loan.book_copy.accession_number }}</small>
+                  </td>
+                  <td>{{ fine.days_overdue }} days</td>
+                  <td class="fw-bold {% if fine.payment_status == 'unpaid' %}text-danger{% else %}text-success{% endif %}">
+                    ${{ fine.amount|money }}
+                  </td>
+                  <td>
+                    {% if fine.payment_status == 'unpaid' %}
+                      <span class="badge bg-danger">Unpaid</span>
+                    {% elif fine.payment_status == 'paid' %}
+                      <span class="badge bg-success">Paid</span>
+                    {% else %}
+                      <span class="badge bg-secondary">Waived</span>
+                    {% endif %}
+                  </td>
+                  <td class="small text-muted">{{ fine.recorder.full_name if fine.recorder else '—' }}</td>
+                  <td>
+                    {% if fine.payment_status == 'unpaid' %}
+                      <div class="d-flex gap-1">
+                        <form method="POST" action="{{ url_for('reports.process_fine_payment', fine_id=fine.id) }}" class="d-inline">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Confirm payment collection of ${{ fine.amount }}?')">Mark Paid</button>
+                        </form>
+                        <form method="POST" action="{{ url_for('reports.process_fine_waiver', fine_id=fine.id) }}" class="d-inline">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                          <button type="submit" class="btn btn-sm btn-outline-secondary" onclick="return confirm('Are you sure you want to waive this fine?')">Waive</button>
+                        </form>
+                      </div>
+                    {% else %}
+                      <span class="small text-muted">Settled {{ fine.paid_at|dt }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% else %}
+                <tr><td colspan="8" class="text-center text-muted py-4">No fine records found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

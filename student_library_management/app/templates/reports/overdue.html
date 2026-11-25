@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Overdue Loans Report{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h3 class="fw-bold mb-0 text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Overdue Book Loans</h3>
+        <p class="text-muted small">Active loans that have passed their scheduled return due date</p>
+      </div>
+      <a href="{{ url_for('librarian.dashboard') }}" class="btn btn-sm btn-outline-secondary">Staff Desk</a>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Student</th>
+                <th>Book Title</th>
+                <th>Accession No.</th>
+                <th>Due Date</th>
+                <th>Days Overdue</th>
+                <th>Est. Fine</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for loan in loans %}
+                <tr>
+                  <td>
+                    <strong>{{ loan.student.full_name }}</strong><br>
+                    <small class="text-muted">{{ loan.student.email }} ({{ loan.student.phone or 'No phone' }})</small>
+                  </td>
+                  <td><strong>{{ loan.book_copy.book.title }}</strong></td>
+                  <td class="font-monospace small">{{ loan.book_copy.accession_number }}</td>
+                  <td class="text-danger fw-bold">{{ loan.due_date|dt }}</td>
+                  <td><span class="badge bg-danger">{{ loan.days_overdue }} days</span></td>
+                  <td class="text-danger fw-bold">
+                    ${{ (loan.days_overdue * 5.0)|money }}
+                  </td>
+                  <td>
+                    <form method="POST" action="{{ url_for('librarian.return_loan_action', loan_id=loan.id) }}" class="d-inline">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-sm btn-outline-success">Receive Return</button>
+                    </form>
+                  </td>
+                </tr>
+              {% else %}
+                <tr><td colspan="7" class="text-center text-muted py-4">Hooray! No overdue books currently.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

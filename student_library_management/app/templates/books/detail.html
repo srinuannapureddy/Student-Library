@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-10">
+    <nav class="mb-3">
+      <a href="{{ url_for('books.index') }}" class="text-decoration-none text-muted">
+        <i class="bi bi-arrow-left me-1"></i> Back to catalogue
+      </a>
+    </nav>
+
+    <div class="card mb-4 overflow-hidden">
+      <div class="row g-0">
+        <div class="col-md-4 text-center p-4 bg-light border-end d-flex flex-column align-items-center justify-content-center">
+          {% if book.cover_image %}
+            <img src="{{ cover_url(book.cover_image) }}" class="img-fluid rounded shadow-sm mb-3" style="max-height: 320px;" alt="{{ book.title }}">
+          {% else %}
+            <div class="bg-secondary-subtle p-5 rounded text-secondary mb-3">
+              <i class="bi bi-book-half display-1"></i>
+            </div>
+          {% endif %}
+
+          <div class="w-100">
+            {% if book.available_copies > 0 %}
+              <div class="alert alert-success py-2 mb-2">
+                <i class="bi bi-check-circle me-1"></i> <strong>{{ book.available_copies }}</strong> of {{ book.total_copies }} copies available
+              </div>
+            {% else %}
+              <div class="alert alert-danger py-2 mb-2">
+                <i class="bi bi-x-circle me-1"></i> No copies currently available
+              </div>
+            {% endif %}
+
+            {% if current_user.is_authenticated and current_user.is_student %}
+              {% if book.available_copies > 0 %}
+                <form method="POST" action="{{ url_for('student.request_book', book_id=book.id) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn btn-warning w-100 fw-semibold">
+                    <i class="bi bi-hand-index-thumb me-1"></i> Request to Borrow
+                  </button>
+                </form>
+              {% else %}
+                <button class="btn btn-secondary w-100" disabled>Unavailable to Request</button>
+              {% endif %}
+            {% elif not current_user.is_authenticated %}
+              <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary w-100">
+                Sign in to borrow
+              </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="col-md-8 p-4">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            {% if book.category %}
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ book.category.category_name }}</span>
+            {% endif %}
+            {% if book.edition %}
+              <span class="badge bg-secondary-subtle text-secondary border">{{ book.edition }}</span>
+            {% endif %}
+          </div>
+
+          <h2 class="fw-bold mb-1">{{ book.title }}</h2>
+          <h5 class="text-muted mb-4">by {{ book.author }}</h5>
+
+          <h6 class="fw-bold text-uppercase text-muted small">Description</h6>
+          <p class="text-secondary leading-relaxed mb-4">
+            {{ book.description or "No synopsis available for this title." }}
+          </p>
+
+          <h6 class="fw-bold text-uppercase text-muted small mb-3">Book Information</h6>
+          <div class="row g-2 mb-4">
+            <div class="col-sm-6">
+              <span class="text-muted d-block small">ISBN</span>
+              <strong class="font-monospace">{{ book.isbn }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block small">Publisher</span>
+              <strong>{{ book.publisher or "—" }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block small">Publication Year</span>
+              <strong>{{ book.publication_year or "—" }}</strong>
+            </div>
+            <div class="col-sm-6">
+              <span class="text-muted d-block small">Total Copies in Library</span>
+              <strong>{{ book.total_copies }}</strong>
+            </div>
+          </div>
+
+          {% if current_user.is_authenticated and (current_user.is_librarian or current_user.is_admin) %}
+            <div class="border-top pt-3 mt-4">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold mb-0"><i class="bi bi-shield-check me-1"></i> Physical Copies Inventory</h6>
+                <a href="{{ url_for('librarian.manage_copies', book_id=book.id) }}" class="btn btn-sm btn-outline-secondary">Manage Copies</a>
+              </div>
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Accession Number</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for copy in book.copies %}
+                      <tr>
+                        <td class="font-monospace">{{ copy.accession_number }}</td>
+                        <td>
+                          {% if copy.status == 'available' %}
+                            <span class="badge bg-success">Available</span>
+                          {% elif copy.status == 'issued' %}
+                            <span class="badge bg-warning text-dark">Issued</span>
+                          {% elif copy.status == 'maintenance' %}
+                            <span class="badge bg-secondary">Maintenance</span>
+                          {% else %}
+                            <span class="badge bg-danger">Lost</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% else %}
+                      <tr><td colspan="2" class="text-muted text-center">No copies catalogued.</td></tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

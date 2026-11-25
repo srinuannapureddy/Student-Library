@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}All Loans{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="fw-bold mb-0"><i class="bi bi-list-check me-2 text-primary"></i>All Book Loans</h3>
+      <div class="btn-group">
+        <a href="{{ url_for('librarian.loans', filter='active') }}" class="btn btn-sm {% if current_filter == 'active' %}btn-primary{% else %}btn-outline-secondary{% endif %}">Active Loans</a>
+        <a href="{{ url_for('librarian.loans', filter='overdue') }}" class="btn btn-sm {% if current_filter == 'overdue' %}btn-danger{% else %}btn-outline-secondary{% endif %}">Overdue Only</a>
+        <a href="{{ url_for('librarian.loans', filter='all') }}" class="btn btn-sm {% if current_filter == 'all' %}btn-dark{% else %}btn-outline-secondary{% endif %}">All Loans</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Loan ID</th>
+                <th>Student</th>
+                <th>Book Title</th>
+                <th>Accession No.</th>
+                <th>Issued At</th>
+                <th>Due Date</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for loan in loans %}
+                <tr>
+                  <td class="font-monospace small">#{{ loan.id }}</td>
+                  <td>
+                    <strong>{{ loan.student.full_name }}</strong><br>
+                    <small class="text-muted">{{ loan.student.email }}</small>
+                  </td>
+                  <td><strong>{{ loan.book_copy.book.title }}</strong></td>
+                  <td class="font-monospace small">{{ loan.book_copy.accession_number }}</td>
+                  <td>{{ loan.issued_at|dt }}</td>
+                  <td>
+                    <span class="{% if loan.is_overdue and loan.status == 'active' %}text-danger fw-bold{% endif %}">{{ loan.due_date|dt }}</span>
+                  </td>
+                  <td>
+                    {% if loan.status == 'returned' %}
+                      <span class="badge bg-secondary">Returned</span>
+                    {% elif loan.is_overdue %}
+                      <span class="badge bg-danger">{{ loan.days_overdue }}d Overdue</span>
+                    {% else %}
+                      <span class="badge bg-success">Active</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if loan.status == 'active' %}
+                      <form method="POST" action="{{ url_for('librarian.return_loan_action', loan_id=loan.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-success">Receive Return</button>
+                      </form>
+                    {% else %}
+                      <span class="text-muted small">Returned {{ loan.returned_at|dt }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% else %}
+                <tr><td colspan="8" class="text-center text-muted py-4">No loans match this filter.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

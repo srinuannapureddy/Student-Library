@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Issue Book{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-7 col-lg-6">
+    <div class="card shadow-sm p-4">
+      <div class="text-center mb-4">
+        <div class="display-5 text-primary mb-2"><i class="bi bi-box-arrow-right"></i></div>
+        <h3 class="fw-bold">Direct Book Issuance</h3>
+        <p class="text-muted small">Walk-in checkout: Scan or enter book accession barcode and student email/ID</p>
+      </div>
+
+      <form method="POST" action="{{ url_for('librarian.issue_book') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="mb-3">
+          <label for="accession_number" class="form-label fw-semibold">Book Copy Accession Number <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-upc-scan"></i></span>
+            <input type="text" class="form-control font-monospace" id="accession_number" name="accession_number" required placeholder="e.g. 97801-0001-001" autofocus>
+          </div>
+          <div class="form-text">Must be a physical copy currently marked as 'Available'.</div>
+        </div>
+
+        <div class="mb-4">
+          <label for="student_identifier" class="form-label fw-semibold">Student Identifier <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+            <input type="text" class="form-control" id="student_identifier" name="student_identifier" required placeholder="Student Email or Student ID (e.g. STU-1001)">
+          </div>
+          <div class="form-text">Matches registered student accounts.</div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+          <i class="bi bi-check-circle me-1"></i> Issue Book to Student
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

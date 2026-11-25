@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{% if book %}Edit Book{% else %}Add Book{% endif %}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-9 col-lg-8">
+    <div class="card shadow-sm p-4">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h3 class="fw-bold mb-0">{% if book %}Edit Book{% else %}Add New Book Title{% endif %}</h3>
+          <p class="text-muted small">Fill out book bibliographic details and initial copies</p>
+        </div>
+        <a href="{{ url_for('admin.books') }}" class="btn btn-sm btn-outline-secondary">Back to catalogue</a>
+      </div>
+
+      <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-8">
+            <label for="title" class="form-label fw-semibold">Book Title <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="title" name="title" value="{{ book.title if book else '' }}" required placeholder="e.g. Clean Code">
+          </div>
+          <div class="col-md-4">
+            <label for="isbn" class="form-label fw-semibold">ISBN (10 or 13) <span class="text-danger">*</span></label>
+            <input type="text" class="form-control font-monospace" id="isbn" name="isbn" value="{{ book.isbn if book else '' }}" required placeholder="9780132350884">
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label for="author" class="form-label fw-semibold">Author(s) <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="author" name="author" value="{{ book.author if book else '' }}" required placeholder="Robert C. Martin">
+          </div>
+          <div class="col-md-6">
+            <label for="category_id" class="form-label fw-semibold">Category</label>
+            <select name="category_id" id="category_id" class="form-select">
+              <option value="">Select Category</option>
+              {% for cat in categories %}
+                <option value="{{ cat.id }}" {% if book and book.category_id == cat.id %}selected{% endif %}>{{ cat.category_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-3">
+          <div class="col-md-4">
+            <label for="publisher" class="form-label fw-semibold">Publisher</label>
+            <input type="text" class="form-control" id="publisher" name="publisher" value="{{ book.publisher if book else '' }}" placeholder="Prentice Hall">
+          </div>
+          <div class="col-md-4">
+            <label for="edition" class="form-label fw-semibold">Edition</label>
+            <input type="text" class="form-control" id="edition" name="edition" value="{{ book.edition if book else '' }}" placeholder="1st Edition">
+          </div>
+          <div class="col-md-4">
+            <label for="publication_year" class="form-label fw-semibold">Publication Year</label>
+            <input type="number" class="form-control" id="publication_year" name="publication_year" value="{{ book.publication_year if book else '' }}" placeholder="2008">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label for="description" class="form-label fw-semibold">Book Synopsis / Description</label>
+          <textarea class="form-control" id="description" name="description" rows="4" placeholder="Brief summary of the book content...">{{ book.description if book else '' }}</textarea>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label for="cover_image" class="form-label fw-semibold">Cover Image (PNG, JPG, WEBP)</label>
+            <input type="file" class="form-control" id="cover_image" name="cover_image" accept="image/*">
+            {% if book and book.cover_image %}
+              <div class="form-text">Current: <a href="{{ cover_url(book.cover_image) }}" target="_blank">{{ book.cover_image }}</a></div>
+            {% endif %}
+          </div>
+          {% if not book %}
+            <div class="col-md-6">
+              <label for="initial_copies" class="form-label fw-semibold">Initial Physical Copies</label>
+              <input type="number" class="form-control" id="initial_copies" name="initial_copies" value="2" min="0" max="50">
+              <div class="form-text">Copies will be created with auto-generated accession IDs.</div>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('admin.books') }}" class="btn btn-outline-secondary w-50">Cancel</a>
+          <button type="submit" class="btn btn-primary w-50 fw-semibold">
+            {% if book %}Save Changes{% else %}Create Book & Add to Catalogue{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

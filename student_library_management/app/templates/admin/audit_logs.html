@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3 class="fw-bold mb-0"><i class="bi bi-journal-text me-2 text-secondary"></i>System Audit Trail</h3>
+      <a href="{{ url_for('admin.dashboard') }}" class="btn btn-sm btn-outline-secondary">Dashboard</a>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th>Timestamp</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Entity Target</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in logs %}
+                <tr>
+                  <td class="small text-muted font-monospace">{{ log.created_at|dt(with_time=True) }}</td>
+                  <td>
+                    {% if log.user %}
+                      <strong>{{ log.user.full_name }}</strong><br>
+                      <small class="text-muted">{{ log.user.email }}</small>
+                    {% else %}
+                      <span class="text-muted">System</span>
+                    {% endif %}
+                  </td>
+                  <td><span class="badge bg-light text-dark border">{{ log.action }}</span></td>
+                  <td><span class="small font-monospace">{{ log.entity_type }} #{{ log.entity_id or '—' }}</span></td>
+                  <td class="small text-secondary">{{ log.description }}</td>
+                </tr>
+              {% else %}
+                <tr><td colspan="5" class="text-center text-muted py-4">No audit logs recorded yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {% if pagination.pages > 1 %}
+      <nav class="mt-4">
+        <ul class="pagination justify-content-center">
+          {% for p in pagination.iter_pages() %}
+            {% if p %}
+              <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('admin.audit_logs', page=p) }}">{{ p }}</a>
+              </li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </nav>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
