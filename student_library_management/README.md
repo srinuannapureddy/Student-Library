@@ -42,12 +42,14 @@ student_library_management/
 ## 🚀 Quick Local Setup
 
 ### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/<your-username>/student-library-management.git
 cd student_library_management
 ```
 
 ### 2. Set Up a Virtual Environment
+
 ```bash
 # Windows
 python -m venv venv
@@ -59,12 +61,15 @@ source venv/bin/activate
 ```
 
 ### 3. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 4. Configure Environment Variables
+
 Copy `.env.example` to `.env`:
+
 ```env
 FLASK_ENV=development
 SECRET_KEY=change-this-to-a-secure-random-key
@@ -75,15 +80,18 @@ SESSION_COOKIE_SECURE=false
 ```
 
 ### 5. Initialize Database & Seed Demo Data
+
 ```bash
 flask init-db
 flask seed-demo --password Pass1234
 ```
 
 ### 6. Run the Application
+
 ```bash
 python run.py
 ```
+
 Open **[http://localhost:5000](http://localhost:5000)** in your browser.
 
 ---
@@ -92,11 +100,11 @@ Open **[http://localhost:5000](http://localhost:5000)** in your browser.
 
 The database comes pre-seeded with test accounts (`Password: Pass1234` for all):
 
-| Role | Email | Password | Features / Permissions |
-|---|---|---|---|
-| **Admin** | `admin@library.edu` | `Pass1234` | System control, catalogue management, user status/roles, settings & analytics |
+| Role          | Email                   | Password   | Features / Permissions                                                          |
+| ------------- | ----------------------- | ---------- | ------------------------------------------------------------------------------- |
+| **Admin**     | `admin@library.edu`     | `Pass1234` | System control, catalogue management, user status/roles, settings & analytics   |
 | **Librarian** | `librarian@library.edu` | `Pass1234` | Issue/return desk, barcode/accession scanning, request review, overdue tracking |
-| **Student** | `alice@student.edu` | `Pass1234` | Browse books, request borrowing, view active loans, fines & notifications |
+| **Student**   | `alice@student.edu`     | `Pass1234` | Browse books, request borrowing, view active loans, fines & notifications       |
 
 ---
 
@@ -105,6 +113,7 @@ The database comes pre-seeded with test accounts (`Password: Pass1234` for all):
 > **Note**: **GitHub Pages** only hosts static websites (HTML/CSS/JS). Because this is a dynamic Python/Flask application with a database and backend routing, it needs a cloud runtime like **Render**, **Railway**, or **PythonAnywhere**.
 
 ### Step 1: Push Project to GitHub
+
 ```bash
 git init
 git add .
@@ -115,6 +124,7 @@ git push -u origin main
 ```
 
 ### Step 2: Deploy to Render (Free)
+
 1. Go to [Render.com](https://render.com) and sign in with GitHub.
 2. Click **New +** -> **Web Service**.
 3. Select your repository `student-library-management`.

@@ -29,6 +29,20 @@ def create_app(config_name=None):
     register_template_helpers(app)
     register_cli(app)
 
+    # Automatically create tables and seed defaults on first startup (e.g. Render / Production)
+    with app.app_context():
+        try:
+            db.create_all()
+            from app.models.library_setting import LibrarySetting
+            LibrarySetting.seed_defaults()
+
+            from app.models.book import Book
+            if Book.query.count() == 0:
+                from app.services.demo_data import seed
+                seed("Pass1234")
+        except Exception as exc:
+            app.logger.warning("Auto-init DB skipped or failed: %s", exc)
+
     logging.basicConfig(level=logging.INFO)
     return app
 

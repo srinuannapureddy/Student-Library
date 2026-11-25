@@ -5,12 +5,22 @@ from dotenv import load_dotenv
 basedir = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(basedir, ".env"))
 
+raw_db_url = os.environ.get("DATABASE_URL")
+if not raw_db_url:
+    default_db_path = os.path.join(basedir, "student_library.db").replace("\\", "/")
+    raw_db_url = f"sqlite:///{default_db_path}"
+elif raw_db_url.startswith("postgres://"):
+    raw_db_url = raw_db_url.replace("postgres://", "postgresql://", 1)
+elif raw_db_url == "sqlite:///student_library.db":
+    default_db_path = os.path.join(basedir, "student_library.db").replace("\\", "/")
+    raw_db_url = f"sqlite:///{default_db_path}"
+
 
 class Config:
-    SECRET_KEY = os.environ.get("SECRET_KEY")
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
+    SECRET_KEY = os.environ.get("SECRET_KEY", "fallback-secret-key-student-library-management")
+    SQLALCHEMY_DATABASE_URI = raw_db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True, "pool_recycle": 280}
+    SQLALCHEMY_ENGINE_OPTIONS = {} if "sqlite" in raw_db_url else {"pool_pre_ping": True, "pool_recycle": 280}
 
     UPLOAD_FOLDER = os.path.join(basedir, os.environ.get("UPLOAD_FOLDER", "app/static/uploads"))
     MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH_MB", "2")) * 1024 * 1024
